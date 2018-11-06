@@ -1,9 +1,6 @@
 package slp;
 
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.util.HashSet;
-
+import control.Control;
 import slp.Slp.Exp;
 import slp.Slp.Exp.Eseq;
 import slp.Slp.Exp.Id;
@@ -13,21 +10,34 @@ import slp.Slp.ExpList;
 import slp.Slp.Stm;
 import util.Bug;
 import util.Todo;
-import control.Control;
 
-public class Main
-{
+import java.io.FileWriter;
+import java.util.HashSet;
+
+public class Main {
   // ///////////////////////////////////////////
   // maximum number of args
 
-  private int maxArgsExp(Exp.T exp)
-  {
-    new Todo();
-    return -1;
+  private int maxArgsExp(Exp.T exp) {
+    if (exp instanceof Eseq) {
+      return maxArgsStm(((Eseq) exp).stm);
+    }
+    return 1;
   }
 
-  private int maxArgsStm(Stm.T stm)
-  {
+  private int maxArgsExpList(ExpList.T expList) {
+    if (expList instanceof ExpList.Last) {
+      return maxArgsExp(((ExpList.Last) expList).exp);
+    } else if (expList instanceof ExpList.Pair) {
+      return maxArgsExp(((ExpList.Pair) expList).exp) +
+          maxArgsExpList(((ExpList.Pair) expList).list);
+    } else {
+      new Bug();
+    }
+    return 0;
+  }
+
+  private int maxArgsStm(Stm.T stm) {
     if (stm instanceof Stm.Compound) {
       Stm.Compound s = (Stm.Compound) stm;
       int n1 = maxArgsStm(s.s1);
@@ -35,11 +45,9 @@ public class Main
 
       return n1 >= n2 ? n1 : n2;
     } else if (stm instanceof Stm.Assign) {
-      new Todo();
-      return -1;
+      return maxArgsExp(((Stm.Assign) stm).exp);
     } else if (stm instanceof Stm.Print) {
-      new Todo();
-      return -1;
+      return maxArgsExpList(((Stm.Print) stm).explist);
     } else
       new Bug();
     return 0;
@@ -48,13 +56,11 @@ public class Main
   // ////////////////////////////////////////
   // interpreter
 
-  private void interpExp(Exp.T exp)
-  {
+  private void interpExp(Exp.T exp) {
     new Todo();
   }
 
-  private void interpStm(Stm.T prog)
-  {
+  private void interpStm(Stm.T prog) {
     if (prog instanceof Stm.Compound) {
       new Todo();
     } else if (prog instanceof Stm.Assign) {
@@ -70,13 +76,11 @@ public class Main
   HashSet<String> ids;
   StringBuffer buf;
 
-  private void emit(String s)
-  {
+  private void emit(String s) {
     buf.append(s);
   }
 
-  private void compileExp(Exp.T exp)
-  {
+  private void compileExp(Exp.T exp) {
     if (exp instanceof Id) {
       Exp.Id e = (Exp.Id) exp;
       String id = e.id;
@@ -94,40 +98,40 @@ public class Main
       Exp.OP_T op = e.op;
 
       switch (op) {
-      case ADD:
-        compileExp(left);
-        emit("\tpushl\t%eax\n");
-        compileExp(right);
-        emit("\tpopl\t%edx\n");
-        emit("\taddl\t%edx, %eax\n");
-        break;
-      case SUB:
-        compileExp(left);
-        emit("\tpushl\t%eax\n");
-        compileExp(right);
-        emit("\tpopl\t%edx\n");
-        emit("\tsubl\t%eax, %edx\n");
-        emit("\tmovl\t%edx, %eax\n");
-        break;
-      case TIMES:
-        compileExp(left);
-        emit("\tpushl\t%eax\n");
-        compileExp(right);
-        emit("\tpopl\t%edx\n");
-        emit("\timul\t%edx\n");
-        break;
-      case DIVIDE:
-        compileExp(left);
-        emit("\tpushl\t%eax\n");
-        compileExp(right);
-        emit("\tpopl\t%edx\n");
-        emit("\tmovl\t%eax, %ecx\n");
-        emit("\tmovl\t%edx, %eax\n");
-        emit("\tcltd\n");
-        emit("\tdiv\t%ecx\n");
-        break;
-      default:
-        new Bug();
+        case ADD:
+          compileExp(left);
+          emit("\tpushl\t%eax\n");
+          compileExp(right);
+          emit("\tpopl\t%edx\n");
+          emit("\taddl\t%edx, %eax\n");
+          break;
+        case SUB:
+          compileExp(left);
+          emit("\tpushl\t%eax\n");
+          compileExp(right);
+          emit("\tpopl\t%edx\n");
+          emit("\tsubl\t%eax, %edx\n");
+          emit("\tmovl\t%edx, %eax\n");
+          break;
+        case TIMES:
+          compileExp(left);
+          emit("\tpushl\t%eax\n");
+          compileExp(right);
+          emit("\tpopl\t%edx\n");
+          emit("\timul\t%edx\n");
+          break;
+        case DIVIDE:
+          compileExp(left);
+          emit("\tpushl\t%eax\n");
+          compileExp(right);
+          emit("\tpopl\t%edx\n");
+          emit("\tmovl\t%eax, %ecx\n");
+          emit("\tmovl\t%edx, %eax\n");
+          emit("\tcltd\n");
+          emit("\tdiv\t%ecx\n");
+          break;
+        default:
+          new Bug();
       }
     } else if (exp instanceof Eseq) {
       Eseq e = (Eseq) exp;
@@ -140,8 +144,7 @@ public class Main
       new Bug();
   }
 
-  private void compileExpList(ExpList.T explist)
-  {
+  private void compileExpList(ExpList.T explist) {
     if (explist instanceof ExpList.Pair) {
       ExpList.Pair pair = (ExpList.Pair) explist;
       Exp.T exp = pair.exp;
@@ -166,8 +169,7 @@ public class Main
       new Bug();
   }
 
-  private void compileStm(Stm.T prog)
-  {
+  private void compileStm(Stm.T prog) {
     if (prog instanceof Stm.Compound) {
       Stm.Compound s = (Stm.Compound) prog;
       Stm.T s1 = s.s1;
@@ -196,8 +198,7 @@ public class Main
   }
 
   // ////////////////////////////////////////
-  public void doit(Stm.T prog)
-  {
+  public void doit(Stm.T prog) {
     // return the maximum number of arguments
     if (Control.ConSlp.action == Control.ConSlp.T.ARGS) {
       int numArgs = maxArgsStm(prog);

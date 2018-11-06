@@ -1,7 +1,6 @@
 package lexer;
 
-public class Token
-{
+public class Token {
   // Lab 1, exercise 1: read the MiniJava specification
   // carefully, and answer these two questions:
   //   1. whether or not one should add other token kinds?
@@ -62,21 +61,18 @@ public class Token
 
   // Some tokens don't come with lexeme but 
   // others do.
-  public Token(Kind kind, Integer lineNum)
-  {
+  public Token(Kind kind, Integer lineNum) {
     this.kind = kind;
     this.lineNum = lineNum;
   }
 
-  public Token(Kind kind, Integer lineNum, String lexeme)
-  {
+  public Token(Kind kind, Integer lineNum, String lexeme) {
     this(kind, lineNum);
     this.lexeme = lexeme;
   }
 
   @Override
-  public String toString()
-  {
+  public String toString() {
     String s;
 
     // to check that the "lineNum" field has been properly set.
