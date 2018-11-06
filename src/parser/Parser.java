@@ -76,6 +76,7 @@ public class Parser {
         advance();
         return;
       case TOKEN_TRUE:
+      case TOKEN_FALSE:
         advance();
         return;
       case TOKEN_THIS:
@@ -199,7 +200,57 @@ public class Parser {
   private void parseStatement() {
     // Lab1. Exercise 4: Fill in the missing code
     // to parse a statement.
-    new util.Todo();
+    switch (current.kind) {
+      case TOKEN_LBRACE:
+        advance();
+        parseStatements();
+        eatToken(Kind.TOKEN_RBRACE);
+        break;
+      case TOKEN_IF:
+        advance();
+        eatToken(Kind.TOKEN_LPAREN);
+        parseExp();
+        eatToken(Kind.TOKEN_RPAREN);
+        parseStatement();
+        eatToken(Kind.TOKEN_ELSE);
+        parseStatement();
+        break;
+      case TOKEN_WHILE:
+        advance();
+        eatToken(Kind.TOKEN_LPAREN);
+        parseExp();
+        eatToken(Kind.TOKEN_RPAREN);
+        parseStatement();
+        break;
+      case TOKEN_SYSTEM:
+        advance();
+        eatToken(Kind.TOKEN_DOT);
+        eatToken(Kind.TOKEN_OUT);
+        eatToken(Kind.TOKEN_DOT);
+        eatToken(Kind.TOKEN_PRINTLN);
+        eatToken(Kind.TOKEN_LPAREN);
+        parseExp();
+        eatToken(Kind.TOKEN_RPAREN);
+        eatToken(Kind.TOKEN_SEMI);
+        break;
+      case TOKEN_ID:
+        advance();
+        if (current.kind == Kind.TOKEN_ASSIGN) {
+          advance();
+          parseExp();
+          eatToken(Kind.TOKEN_SEMI);
+        } else if (current.kind == Kind.TOKEN_LBRACK) {
+          advance();
+          parseExp();
+          eatToken(Kind.TOKEN_RBRACK);
+          eatToken(Kind.TOKEN_ASSIGN);
+          parseExp();
+          eatToken(Kind.TOKEN_SEMI);
+        } else {
+          error();
+        }
+        break;
+    }
   }
 
   // Statements -> Statement Statements
@@ -220,7 +271,23 @@ public class Parser {
   private void parseType() {
     // Lab1. Exercise 4: Fill in the missing code
     // to parse a type.
-    new util.Todo();
+    switch (current.kind) {
+      case TOKEN_INT:
+        advance();
+        if (current.kind == Kind.TOKEN_LBRACK) {
+          advance();
+          eatToken(Kind.TOKEN_RBRACK);
+        }
+        break;
+      case TOKEN_BOOLEAN:
+        advance();
+        break;
+      case TOKEN_ID:
+        advance();
+        break;
+      default:
+        error();
+    }
   }
 
   // VarDecl -> Type id ;
@@ -238,7 +305,14 @@ public class Parser {
   private void parseVarDecls() {
     while (current.kind == Kind.TOKEN_INT || current.kind == Kind.TOKEN_BOOLEAN
         || current.kind == Kind.TOKEN_ID) {
-      parseVarDecl();
+
+
+      Token next = lexer.peek();
+      if (next.kind == Kind.TOKEN_ID || next.kind == Kind.TOKEN_LBRACK) {
+        parseVarDecl();
+      } else {
+        break;
+      }
     }
     return;
   }
@@ -265,7 +339,23 @@ public class Parser {
   private void parseMethod() {
     // Lab1. Exercise 4: Fill in the missing code
     // to parse a method.
-    new util.Todo();
+
+    advance();
+    parseType();
+    eatToken(Kind.TOKEN_ID);
+    eatToken(Kind.TOKEN_LPAREN);
+    parseFormalList();
+    eatToken(Kind.TOKEN_RPAREN);
+    eatToken(Kind.TOKEN_LBRACE);
+
+
+    parseVarDecls();
+    parseStatements();
+
+    eatToken(Kind.TOKEN_RETURN);
+    parseExp();
+    eatToken(Kind.TOKEN_SEMI);
+    eatToken(Kind.TOKEN_RBRACE);
     return;
   }
 
@@ -314,7 +404,23 @@ public class Parser {
     // Lab1. Exercise 4: Fill in the missing code
     // to parse a main class as described by the
     // grammar above.
-    new util.Todo();
+    advance();
+    eatToken(Kind.TOKEN_ID);
+    eatToken(Kind.TOKEN_LBRACE);
+    eatToken(Kind.TOKEN_PUBLIC);
+    eatToken(Kind.TOKEN_STATIC);
+    eatToken(Kind.TOKEN_VOID);
+    eatToken(Kind.TOKEN_MAIN);
+    eatToken(Kind.TOKEN_LPAREN);
+    eatToken(Kind.TOKEN_STRING);
+    eatToken(Kind.TOKEN_LBRACK);
+    eatToken(Kind.TOKEN_RBRACK);
+    eatToken(Kind.TOKEN_ID);
+    eatToken(Kind.TOKEN_RPAREN);
+    eatToken(Kind.TOKEN_LBRACE);
+    parseStatement();
+    eatToken(Kind.TOKEN_RBRACE);
+    eatToken(Kind.TOKEN_RBRACE);
   }
 
   // Program -> MainClass ClassDecl*

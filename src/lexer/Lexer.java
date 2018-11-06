@@ -13,11 +13,13 @@ public class Lexer {
   InputStream fstream; // input stream for the above file
   Map<String, Kind> keywords;
   int lineNumber;
+  Token peekToken;
 
   public Lexer(String fname, InputStream fstream) {
     this.fname = fname;
     this.fstream = fstream;
     this.lineNumber = 1;
+    this.peekToken = null;
 
     keywords = new HashMap<>();
     keywords.put("boolean", Kind.TOKEN_BOOLEAN);
@@ -90,7 +92,7 @@ public class Lexer {
     fstream.reset();
 
     String lexeme = sb.toString();
-    return new Token(Kind.TOKEN_INT, lineNumber, lexeme);
+    return new Token(Kind.TOKEN_NUM, lineNumber, lexeme);
   }
 
   // When called, return the next token (refer to the code "Token.java")
@@ -105,15 +107,31 @@ public class Lexer {
       // line number for the "EOF" token.
       return new Token(Kind.TOKEN_EOF, null);
 
-    // skip all kinds of "blanks"
-    while (' ' == c || '\t' == c || '\n' == c) {
+    // skip all kinds of "blanks" or comments
+    while (' ' == c || '\t' == c || '\n' == c || '/' == c) {
       if (c == '\n') {
         ++this.lineNumber;
+      } else if (c == '/') {
+        c = fstream.read();
+        if (c == '/') {
+          c = fstream.read();
+          while (c != -1) {
+            if (c == '\n') {
+              ++lineNumber;
+              break;
+            }
+            c = fstream.read();
+          }
+
+        }
       }
       c = this.fstream.read();
     }
+
+
     if (-1 == c)
       return new Token(Kind.TOKEN_EOF, lineNumber);
+
 
     switch (c) {
       case '+':
@@ -151,6 +169,8 @@ public class Lexer {
         return new Token(Kind.TOKEN_SUB, lineNumber);
       case '*':
         return new Token(Kind.TOKEN_TIMES, lineNumber);
+
+
       default:
         // Lab 1, exercise 2: supply missing code to
         // lex other kinds of tokens.
@@ -171,6 +191,11 @@ public class Lexer {
   public Token nextToken() {
     Token t = null;
 
+    if (peekToken != null) {
+      t = peekToken;
+      peekToken = null;
+      return t;
+    }
     try {
       t = this.nextTokenInternal();
     } catch (Exception e) {
@@ -180,5 +205,14 @@ public class Lexer {
     if (dump)
       System.out.println(t.toString());
     return t;
+  }
+
+  public Token peek() {
+    if (peekToken != null) {
+      System.err.println("at most one token can be looked ahead");
+      System.exit(1);
+    }
+    this.peekToken = nextToken();
+    return this.peekToken;
   }
 }
