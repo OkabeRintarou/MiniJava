@@ -54,5 +54,49 @@ public class Fac {
   // represent the program "test/Sum.java".
   // Your code here:
 
+  // main class: Sum
+  static MainClass.T sum = new MainClassSingle(
+      "Sum", "a",
+      new Print(
+          new Call(
+              new NewObject("Doit"), "doit",
+              new util.Flist<Exp.T>().list(new Num(101))
+          )
+      )
+  );
 
+  static Ast.Class.T doit = new Ast.Class.ClassSingle("Doit", null,
+      new util.Flist<Dec.T>().list(),
+      new util.Flist<Method.T>().list(
+          new Method.MethodSingle(
+              new Type.Int(),
+              "doit",
+              new util.Flist<Dec.T>().list(
+                  new Dec.DecSingle(new Type.Int(), "n")
+              ),
+              new util.Flist<Dec.T>().list(
+                  new Dec.DecSingle(new Type.Int(), "sum"),
+                  new Dec.DecSingle(new Type.Int(), "i")
+              ),
+              new util.Flist<Stm.T>().list(
+                  new Assign("i", new Num(0)),
+                  new Assign("sum", new Num(0)),
+                  new Stm.While(
+                      new Lt(new Id("i"), new Id("n")),
+                      new Stm.Block(new util.Flist<Stm.T>().list(
+                          new Assign("sum", new Add(new Id("sum"), new Id("i"))),
+                          new Assign("i", new Add(new Id("i"), new Num(1)))
+                      ))
+                  )
+              ),
+              new Id("sum")
+          )
+      )
+  );
+
+
+  public static Program.T sumProg = new ProgramSingle(
+      sum,
+      new util.Flist<Ast.Class.T>().list(doit)
+  );
 }
