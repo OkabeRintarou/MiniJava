@@ -35,8 +35,32 @@ public class CommandLine {
 
   @SuppressWarnings("unchecked")
   public CommandLine() {
-    this.args = new util.Flist<Arg<Object>>().list(new Arg<Object>("help",
-        null, "show this help information", Kind.Empty, (s) -> {
+    this.args = new util.Flist<Arg<Object>>().list(new Arg<Object>("dump",
+        "{ast}", "dump information about the given ir", Kind.String, (ss) -> {
+      String s = (String) ss;
+      if (s.equals("ast")) {
+        Control.ConAst.dumpAst = true;
+      } else {
+        System.out.println("bad argument: " + s);
+        output();
+        System.exit(1);
+      }
+      return;
+    }), new Arg<Object>("elab", "<arg>",
+        "dump information about elaboration", Kind.String, (ss) -> {
+      String s = (String) ss;
+      if (s.equals("classTable")) {
+        Control.ConAst.elabClassTable = true;
+      } else if (s.equals("methodTable"))
+        Control.ConAst.elabMethodTable = true;
+      else {
+        System.out.println("bad argument: " + s);
+        output();
+        System.exit(1);
+      }
+      return;
+    }), new Arg<Object>("help", null, "show this help information",
+        Kind.Empty, (s) -> {
       usage();
       System.exit(1);
       return;
@@ -63,8 +87,12 @@ public class CommandLine {
         output();
         System.exit(1);
       }
-      return;
-    }), new Arg<Object>("testlexer", null,
+    }), new Arg<Object>("testFac", null,
+        "whether or not to test the Tiger compiler on Fac.java", Kind.Empty,
+        (s) -> {
+          Control.ConAst.testFac = true;
+          return;
+        }), new Arg<Object>("testlexer", null,
         "whether or not to test the lexer", Kind.Empty, (s) -> {
       Control.ConLexer.test = true;
       return;
@@ -94,6 +122,7 @@ public class CommandLine {
           continue;
 
         found = true;
+        String theArg = null;
         switch (arg.kind) {
           case Empty:
             arg.action.f(null);
@@ -108,7 +137,7 @@ public class CommandLine {
             break;
         }
 
-        String theArg = cargs[i];
+        theArg = cargs[i];
         switch (arg.kind) {
           case Bool:
             if (theArg.equals("true"))
@@ -125,7 +154,7 @@ public class CommandLine {
             int num = 0;
             try {
               num = Integer.parseInt(theArg);
-            } catch (java.lang.NumberFormatException e) {
+            } catch (NumberFormatException e) {
               System.out.println("Error: " + arg.name + ": requires an integer");
               this.output();
               System.exit(1);

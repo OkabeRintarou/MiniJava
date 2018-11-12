@@ -17,4 +17,14 @@ public class Control {
     public static boolean div = false;
     public static boolean keepasm = false;
   }
+
+  // Ast and elaborator
+  public static class ConAst {
+    public static boolean dumpAst = false;
+    public static boolean testFac = false;
+
+    // elaborator
+    public static boolean elabClassTable = false;
+    public static boolean elabMethodTable = false;
+  }
 }

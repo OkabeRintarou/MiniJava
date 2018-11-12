@@ -431,8 +431,8 @@ public class Parser {
     return;
   }
 
-  public void parse() {
+  public ast.Ast.Program.T parse() {
     parseProgram();
-    return;
+    return null;
   }
 }
