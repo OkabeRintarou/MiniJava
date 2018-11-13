@@ -229,7 +229,7 @@ public class PrettyPrintVisitor implements Visitor {
 
   @Override
   public void visit(ClassType t) {
-    this.sayln(t.id);
+    this.say(t.id);
   }
 
   @Override
