@@ -35,14 +35,34 @@ public class ElaboratorVisitor implements ast.Visitor {
   // expressions
   @Override
   public void visit(Add e) {
+    e.left.accept(this);
+    Type.T leftty = this.type;
+    e.right.accept(this);
+    if (!this.type.toString().equals(leftty.toString()))
+      error();
+    this.type = new Type.Int();
+    return;
   }
 
   @Override
   public void visit(And e) {
+    e.left.accept(this);
+    Type.T leftty = this.type;
+    e.right.accept(this);
+    if (!this.type.toString().equals(leftty.toString()))
+      error();
+    this.type = new Type.Boolean();
+    return;
   }
 
   @Override
   public void visit(ArraySelect e) {
+    e.array.accept(this);
+
+    if (!this.type.toString().equals((new Type.IntArray()).toString())) {
+      error();
+    }
+    this.type = new Type.Int();
   }
 
   @Override
@@ -65,12 +85,21 @@ public class ElaboratorVisitor implements ast.Visitor {
     }
     if (mty.argsType.size() != argsty.size())
       error();
+
     for (int i = 0; i < argsty.size(); i++) {
+
       DecSingle dec = (DecSingle) mty.argsType.get(i);
-      if (dec.type.toString().equals(argsty.get(i).toString()))
-        ;
-      else
-        error();
+      String argTypeName = argsty.get(i).toString();
+
+      while (!dec.type.toString().equals(argTypeName)) {
+        ClassBinding cb = classTable.get(argTypeName);
+        if (cb == null || (argTypeName = cb.extendss) == null) {
+          error();
+        }
+
+      }
+
+
     }
     this.type = mty.retType;
     e.at = argsty;
@@ -80,6 +109,7 @@ public class ElaboratorVisitor implements ast.Visitor {
 
   @Override
   public void visit(False e) {
+    this.type = new Type.Boolean();
   }
 
   @Override
@@ -103,6 +133,7 @@ public class ElaboratorVisitor implements ast.Visitor {
 
   @Override
   public void visit(Length e) {
+    this.type = new Type.Int();
   }
 
   @Override
@@ -118,6 +149,8 @@ public class ElaboratorVisitor implements ast.Visitor {
 
   @Override
   public void visit(NewIntArray e) {
+    e.exp.accept(this);
+    this.type = new Type.IntArray();
   }
 
   @Override
@@ -128,6 +161,8 @@ public class ElaboratorVisitor implements ast.Visitor {
 
   @Override
   public void visit(Not e) {
+    e.exp.accept(this);
+    this.type = new Type.Boolean();
   }
 
   @Override
@@ -166,6 +201,7 @@ public class ElaboratorVisitor implements ast.Visitor {
 
   @Override
   public void visit(True e) {
+    this.type = new Type.Boolean();
   }
 
   // statements
@@ -186,10 +222,33 @@ public class ElaboratorVisitor implements ast.Visitor {
 
   @Override
   public void visit(AssignArray s) {
+    // first look up the id in method table
+    Type.T type = this.methodTable.get(s.id);
+    // if search failed, then s.id must be class field
+    if (type == null) {
+      type = this.classTable.get(this.currentClass, s.id);
+    }
+    if (type == null) {
+      error();
+    }
+
+    s.index.accept(this);
+    if (!this.type.toString().equals((new Type.Int()).toString())) {
+      error();
+    }
+
+    s.exp.accept(this);
+    if (!this.type.toString().equals((new Type.Int()).toString())) {
+      error();
+    }
+    this.type = new Type.Int();
   }
 
   @Override
   public void visit(Block s) {
+    for (Stm.T stm : s.stms) {
+      stm.accept(this);
+    }
   }
 
   @Override
@@ -212,24 +271,32 @@ public class ElaboratorVisitor implements ast.Visitor {
 
   @Override
   public void visit(While s) {
+    s.condition.accept(this);
+    if (!this.type.toString().equals((new Type.Boolean()).toString())) {
+      error();
+    }
+    s.body.accept(this);
   }
 
   // type
   @Override
   public void visit(Type.Boolean t) {
+    this.type = t;
   }
 
   @Override
   public void visit(ClassType t) {
+    this.type = t;
   }
 
   @Override
   public void visit(Type.Int t) {
-    System.out.println("aaaa");
+    this.type = t;
   }
 
   @Override
   public void visit(Type.IntArray t) {
+    this.type = t;
   }
 
   // dec
@@ -241,6 +308,7 @@ public class ElaboratorVisitor implements ast.Visitor {
   @Override
   public void visit(MethodSingle m) {
     // construct the method table
+    this.methodTable.clear();
     this.methodTable.put(m.formals, m.locals);
 
     if (ConAst.elabMethodTable)

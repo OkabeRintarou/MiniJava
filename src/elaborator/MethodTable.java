@@ -2,9 +2,9 @@ package elaborator;
 
 import ast.Ast.Dec;
 import ast.Ast.Type;
-import util.Todo;
 
 import java.util.LinkedList;
+import java.util.Map;
 
 public class MethodTable {
   private java.util.Hashtable<String, Type.T> table;
@@ -41,8 +41,14 @@ public class MethodTable {
     return this.table.get(id);
   }
 
+  public void clear() {
+    this.table.clear();
+  }
+
   public void dump() {
-    new Todo();
+    for (Map.Entry<String,Type.T> e : table.entrySet()) {
+      System.out.println(e.getKey() + " -> " + e.getValue().toString());
+    }
   }
 
   @Override

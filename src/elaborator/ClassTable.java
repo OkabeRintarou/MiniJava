@@ -1,7 +1,8 @@
 package elaborator;
 
 import ast.Ast.Type;
-import util.Todo;
+
+import java.util.Map;
 
 public class ClassTable {
   // map each class name (a string), to the class bindings.
@@ -72,9 +73,16 @@ public class ClassTable {
     return type;
   }
 
+  private static final String ANSI_GREEN = "\u001B[32m";
+  private static final String  ANSI_RESET = "\u001B[0m";
+
   public void dump() {
-    new Todo();
+    for (Map.Entry<String,ClassBinding> e : table.entrySet()) {
+      System.out.print(ANSI_GREEN + e.getKey() + "  " + ANSI_RESET);
+      System.out.print(e.getValue().toString());
+    }
   }
+
 
   @Override
   public String toString() {
