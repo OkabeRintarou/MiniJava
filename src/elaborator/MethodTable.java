@@ -46,7 +46,7 @@ public class MethodTable {
   }
 
   public void dump() {
-    for (Map.Entry<String,Type.T> e : table.entrySet()) {
+    for (Map.Entry<String, Type.T> e : table.entrySet()) {
       System.out.println(e.getKey() + " -> " + e.getValue().toString());
     }
   }

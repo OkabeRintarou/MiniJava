@@ -74,10 +74,10 @@ public class ClassTable {
   }
 
   private static final String ANSI_GREEN = "\u001B[32m";
-  private static final String  ANSI_RESET = "\u001B[0m";
+  private static final String ANSI_RESET = "\u001B[0m";
 
   public void dump() {
-    for (Map.Entry<String,ClassBinding> e : table.entrySet()) {
+    for (Map.Entry<String, ClassBinding> e : table.entrySet()) {
       System.out.print(ANSI_GREEN + e.getKey() + "  " + ANSI_RESET);
       System.out.print(e.getValue().toString());
     }
