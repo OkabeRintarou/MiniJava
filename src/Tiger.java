@@ -52,7 +52,7 @@ public class Tiger {
           codegen.C.TranslateVisitor transC = new codegen.C.TranslateVisitor();
           ast.Fac.prog.accept(transC);
           codegen.C.Ast.Program.T cAst = transC.program;
-          codegen.C.PrettyPrintVisitor ppc = new codegen.C.PrettyPrintVisitor();
+          codegen.C.PrettyPrintVisitor ppc = new codegen.C.PrettyPrintVisitor(transC);
           cAst.accept(ppc);
           break;
         case Dalvik:
@@ -135,7 +135,7 @@ public class Tiger {
         codegen.C.TranslateVisitor transC = new codegen.C.TranslateVisitor();
         theAst.accept(transC);
         codegen.C.Ast.Program.T cAst = transC.program;
-        codegen.C.PrettyPrintVisitor ppc = new codegen.C.PrettyPrintVisitor();
+        codegen.C.PrettyPrintVisitor ppc = new codegen.C.PrettyPrintVisitor(transC);
         cAst.accept(ppc);
         break;
       case Dalvik:

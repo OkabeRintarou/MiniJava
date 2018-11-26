@@ -7,9 +7,7 @@ import codegen.C.Ast.Exp.*;
 import codegen.C.Ast.MainMethod.MainMethodSingle;
 import codegen.C.Ast.Method.MethodSingle;
 import codegen.C.Ast.Program.ProgramSingle;
-import codegen.C.Ast.Stm.Assign;
-import codegen.C.Ast.Stm.If;
-import codegen.C.Ast.Stm.Print;
+import codegen.C.Ast.Stm.*;
 import codegen.C.Ast.Type.ClassType;
 import codegen.C.Ast.Vtable.VtableSingle;
 
@@ -28,7 +26,7 @@ public class TranslateVisitor implements ast.Visitor {
   private LinkedList<Dec.T> tmpVars;
   private LinkedList<Class.T> classes;
   private LinkedList<Vtable.T> vtables;
-  private LinkedList<Method.T> methods;
+  LinkedList<Method.T> methods;
   private MainMethod.T mainMethod;
   public Program.T program;
 
@@ -40,16 +38,16 @@ public class TranslateVisitor implements ast.Visitor {
     this.stm = null;
     this.exp = null;
     this.method = null;
-    this.classes = new LinkedList<Class.T>();
-    this.vtables = new LinkedList<Vtable.T>();
-    this.methods = new LinkedList<Method.T>();
+    this.classes = new LinkedList<>();
+    this.vtables = new LinkedList<>();
+    this.methods = new LinkedList<>();
     this.mainMethod = null;
     this.program = null;
   }
 
   // //////////////////////////////////////////////////////
   //
-  public String genId() {
+  private String genId() {
     return util.Temp.next();
   }
 
@@ -57,14 +55,27 @@ public class TranslateVisitor implements ast.Visitor {
   // expressions
   @Override
   public void visit(ast.Ast.Exp.Add e) {
+    e.left.accept(this);
+    Exp.T left = this.exp;
+    e.right.accept(this);
+    this.exp = new Add(left, this.exp);
   }
 
   @Override
   public void visit(ast.Ast.Exp.And e) {
+    e.left.accept(this);
+    Exp.T left = this.exp;
+    e.right.accept(this);
+    this.exp = new And(left, this.exp);
   }
 
   @Override
   public void visit(ast.Ast.Exp.ArraySelect e) {
+    e.index.accept(this);
+    Exp.T index = this.exp;
+    e.array.accept(this);
+    Exp.T array = this.exp;
+    this.exp = new ArraySelect(array, index);
   }
 
   @Override
@@ -73,27 +84,27 @@ public class TranslateVisitor implements ast.Visitor {
     String newid = this.genId();
     this.tmpVars.add(new Dec.DecSingle(new ClassType(e.type), newid));
     Exp.T exp = this.exp;
-    LinkedList<Exp.T> args = new LinkedList<Exp.T>();
+    LinkedList<Exp.T> args = new LinkedList<>();
     for (ast.Ast.Exp.T x : e.args) {
       x.accept(this);
       args.add(this.exp);
     }
     this.exp = new Call(newid, exp, e.id, args);
-    return;
   }
 
   @Override
   public void visit(ast.Ast.Exp.False e) {
+    this.exp = new Num(0);
   }
 
   @Override
   public void visit(ast.Ast.Exp.Id e) {
     this.exp = new Id(e.id);
-    return;
   }
 
   @Override
   public void visit(ast.Ast.Exp.Length e) {
+    System.out.println();
   }
 
   @Override
@@ -103,27 +114,28 @@ public class TranslateVisitor implements ast.Visitor {
     e.right.accept(this);
     Exp.T right = this.exp;
     this.exp = new Lt(left, right);
-    return;
   }
 
   @Override
   public void visit(ast.Ast.Exp.NewIntArray e) {
+    e.exp.accept(this);
+    this.exp = new NewIntArray(this.exp);
   }
 
   @Override
   public void visit(ast.Ast.Exp.NewObject e) {
     this.exp = new NewObject(e.id);
-    return;
   }
 
   @Override
   public void visit(ast.Ast.Exp.Not e) {
+    e.exp.accept(this);
+    this.exp = new Not(this.exp);
   }
 
   @Override
   public void visit(ast.Ast.Exp.Num e) {
     this.exp = new Num(e.num);
-    return;
   }
 
   @Override
@@ -133,13 +145,11 @@ public class TranslateVisitor implements ast.Visitor {
     e.right.accept(this);
     Exp.T right = this.exp;
     this.exp = new Sub(left, right);
-    return;
   }
 
   @Override
   public void visit(ast.Ast.Exp.This e) {
     this.exp = new This();
-    return;
   }
 
   @Override
@@ -149,11 +159,11 @@ public class TranslateVisitor implements ast.Visitor {
     e.right.accept(this);
     Exp.T right = this.exp;
     this.exp = new Times(left, right);
-    return;
   }
 
   @Override
   public void visit(ast.Ast.Exp.True e) {
+    this.exp = new Num(1);
   }
 
   // //////////////////////////////////////////////
@@ -162,15 +172,26 @@ public class TranslateVisitor implements ast.Visitor {
   public void visit(ast.Ast.Stm.Assign s) {
     s.exp.accept(this);
     this.stm = new Assign(s.id, this.exp);
-    return;
   }
 
   @Override
   public void visit(ast.Ast.Stm.AssignArray s) {
+    s.index.accept(this);
+    Exp.T index = this.exp;
+    s.exp.accept(this);
+    Exp.T exp = this.exp;
+    this.stm = new AssignArray(s.id, index, exp);
   }
 
   @Override
   public void visit(ast.Ast.Stm.Block s) {
+
+    LinkedList<Stm.T> stmts = new LinkedList<>();
+    for (ast.Ast.Stm.T stm : s.stms) {
+      stm.accept(this);
+      stmts.add(this.stm);
+    }
+    this.stm = new Block(stmts);
   }
 
   @Override
@@ -182,28 +203,32 @@ public class TranslateVisitor implements ast.Visitor {
     s.elsee.accept(this);
     Stm.T elsee = this.stm;
     this.stm = new If(condition, thenn, elsee);
-    return;
   }
 
   @Override
   public void visit(ast.Ast.Stm.Print s) {
     s.exp.accept(this);
     this.stm = new Print(this.exp);
-    return;
   }
 
   @Override
   public void visit(ast.Ast.Stm.While s) {
+    s.condition.accept(this);
+    Exp.T condition = this.exp;
+    s.body.accept(this);
+    this.stm = new While(condition, this.stm);
   }
 
   // ///////////////////////////////////////////
   // type
   @Override
   public void visit(ast.Ast.Type.Boolean t) {
+    this.type = new Type.Int();
   }
 
   @Override
   public void visit(ast.Ast.Type.ClassType t) {
+    this.type = new ClassType(t.id);
   }
 
   @Override
@@ -213,6 +238,7 @@ public class TranslateVisitor implements ast.Visitor {
 
   @Override
   public void visit(ast.Ast.Type.IntArray t) {
+    this.type = new Type.IntArray();
   }
 
   // ////////////////////////////////////////////////
@@ -221,40 +247,36 @@ public class TranslateVisitor implements ast.Visitor {
   public void visit(ast.Ast.Dec.DecSingle d) {
     d.type.accept(this);
     this.dec = new Dec.DecSingle(this.type, d.id);
-    return;
   }
 
   // method
   @Override
   public void visit(ast.Ast.Method.MethodSingle m) {
-    this.tmpVars = new LinkedList<Dec.T>();
+    this.tmpVars = new LinkedList<>();
     m.retType.accept(this);
     Type.T newRetType = this.type;
-    LinkedList<Dec.T> newFormals = new LinkedList<Dec.T>();
+    LinkedList<Dec.T> newFormals = new LinkedList<>();
     newFormals.add(new Dec.DecSingle(
         new ClassType(this.classId), "this"));
     for (ast.Ast.Dec.T d : m.formals) {
       d.accept(this);
       newFormals.add(this.dec);
     }
-    LinkedList<Dec.T> locals = new LinkedList<Dec.T>();
+    LinkedList<Dec.T> locals = new LinkedList<>();
     for (ast.Ast.Dec.T d : m.locals) {
       d.accept(this);
       locals.add(this.dec);
     }
-    LinkedList<Stm.T> newStm = new LinkedList<Stm.T>();
+    LinkedList<Stm.T> newStm = new LinkedList<>();
     for (ast.Ast.Stm.T s : m.stms) {
       s.accept(this);
       newStm.add(this.stm);
     }
     m.retExp.accept(this);
     Exp.T retExp = this.exp;
-    for (Dec.T dec : this.tmpVars) {
-      locals.add(dec);
-    }
+    locals.addAll(tmpVars);
     this.method = new MethodSingle(newRetType, this.classId, m.id,
         newFormals, locals, newStm, retExp);
-    return;
   }
 
   // class
@@ -268,7 +290,6 @@ public class TranslateVisitor implements ast.Visitor {
       m.accept(this);
       this.methods.add(this.method);
     }
-    return;
   }
 
   // main class
@@ -279,25 +300,22 @@ public class TranslateVisitor implements ast.Visitor {
     this.classes.add(newc);
     this.vtables.add(new VtableSingle(c.id, cb.methods));
 
-    this.tmpVars = new LinkedList<Dec.T>();
+    this.tmpVars = new LinkedList<>();
 
     c.stm.accept(this);
-    MainMethod.T mthd = new MainMethodSingle(
+    this.mainMethod = new MainMethodSingle(
         this.tmpVars, this.stm);
-    this.mainMethod = mthd;
-    return;
   }
 
   // /////////////////////////////////////////////////////
   // the first pass
-  public void scanMain(ast.Ast.MainClass.T m) {
+  private void scanMain(ast.Ast.MainClass.T m) {
     this.table.init(((ast.Ast.MainClass.MainClassSingle) m).id, null);
     // this is a special hacking in that we don't want to
     // enter "main" into the table.
-    return;
   }
 
-  public void scanClasses(LinkedList<ast.Ast.Class.T> cs) {
+  private void scanClasses(LinkedList<ast.Ast.Class.T> cs) {
     // put empty chuncks into the table
     for (ast.Ast.Class.T c : cs) {
       ast.Ast.Class.ClassSingle cc = (ast.Ast.Class.ClassSingle) c;
@@ -307,7 +325,7 @@ public class TranslateVisitor implements ast.Visitor {
     // put class fields and methods into the table
     for (ast.Ast.Class.T c : cs) {
       ast.Ast.Class.ClassSingle cc = (ast.Ast.Class.ClassSingle) c;
-      LinkedList<Dec.T> newDecs = new LinkedList<Dec.T>();
+      LinkedList<Dec.T> newDecs = new LinkedList<>();
       for (ast.Ast.Dec.T dec : cc.decs) {
         dec.accept(this);
         newDecs.add(this.dec);
@@ -318,7 +336,7 @@ public class TranslateVisitor implements ast.Visitor {
       LinkedList<ast.Ast.Method.T> methods = cc.methods;
       for (ast.Ast.Method.T mthd : methods) {
         ast.Ast.Method.MethodSingle m = (ast.Ast.Method.MethodSingle) mthd;
-        LinkedList<Dec.T> newArgs = new LinkedList<Dec.T>();
+        LinkedList<Dec.T> newArgs = new LinkedList<>();
         for (ast.Ast.Dec.T arg : m.formals) {
           arg.accept(this);
           newArgs.add(this.dec);
@@ -336,11 +354,10 @@ public class TranslateVisitor implements ast.Visitor {
     }
   }
 
-  public void scanProgram(ast.Ast.Program.T p) {
+  private void scanProgram(ast.Ast.Program.T p) {
     ast.Ast.Program.ProgramSingle pp = (ast.Ast.Program.ProgramSingle) p;
     scanMain(pp.mainClass);
     scanClasses(pp.classes);
-    return;
   }
 
   // end of the first pass
@@ -360,6 +377,9 @@ public class TranslateVisitor implements ast.Visitor {
     }
     this.program = new ProgramSingle(this.classes, this.vtables,
         this.methods, this.mainMethod);
-    return;
+  }
+
+  public ClassTable getClassTable() {
+    return table;
   }
 }

@@ -7,7 +7,7 @@ public class ClassTable {
   private java.util.Hashtable<String, ClassBinding> table;
 
   public ClassTable() {
-    this.table = new java.util.Hashtable<String, ClassBinding>();
+    this.table = new java.util.Hashtable<>();
   }
 
   public void init(String current, String extendss) {
@@ -65,7 +65,6 @@ public class ClassTable {
     cb.update(newMethods);
     // set the mark
     cb.visited = true;
-    return;
   }
 
   // return null for non-existing keys

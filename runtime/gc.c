@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <malloc.h>
 
 // "new" a new object, do necessary initializations, and
 // return the pointer (reference).
@@ -21,8 +22,13 @@ void *Tiger_new (void *vtable, int size)
   
   // #3: set up the "vptr" pointer to the value of "vtable":
   
-  // #4: return the pointer 
-  
+  // #4: return the pointer
+  if (size <= 0) {
+    return NULL;
+  }
+  void *ptr = calloc(size + sizeof(void*), sizeof(char));
+  *((void**)(ptr)) = vtable;
+  return ptr;
 }
 
 // "new" an array of size "length", do necessary
@@ -42,5 +48,7 @@ void *Tiger_new_array (int length)
 {
   // You can use the C "malloc" facilities, as above.
   // Your code here:
-  
+  void *ptr = malloc(sizeof(char)* (length + sizeof(int)));
+  *(int*)ptr = length;
+  return (char*)ptr + sizeof(int);
 }
