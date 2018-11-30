@@ -44,7 +44,7 @@ public class Tiger {
           codegen.bytecode.TranslateVisitor trans = new codegen.bytecode.TranslateVisitor();
           ast.Fac.prog.accept(trans);
           codegen.bytecode.Ast.Program.T bytecodeAst = trans.program;
-          codegen.bytecode.PrettyPrintVisitor ppbc = new codegen.bytecode.PrettyPrintVisitor();
+          codegen.bytecode.PrettyPrintVisitor ppbc = new codegen.bytecode.PrettyPrintVisitor(trans.getClassTable());
           bytecodeAst.accept(ppbc);
           break;
         case C:
@@ -128,7 +128,7 @@ public class Tiger {
         codegen.bytecode.TranslateVisitor trans = new codegen.bytecode.TranslateVisitor();
         theAst.accept(trans);
         codegen.bytecode.Ast.Program.T bytecodeAst = trans.program;
-        codegen.bytecode.PrettyPrintVisitor ppbc = new codegen.bytecode.PrettyPrintVisitor();
+        codegen.bytecode.PrettyPrintVisitor ppbc = new codegen.bytecode.PrettyPrintVisitor(trans.getClassTable());
         bytecodeAst.accept(ppbc);
         break;
       case C:

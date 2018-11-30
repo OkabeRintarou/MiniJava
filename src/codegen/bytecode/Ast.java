@@ -89,6 +89,44 @@ public class Ast {
     public static abstract class T implements codegen.bytecode.Acceptable {
     }
 
+    public static class Comment extends T {
+      public String comment;
+
+      public Comment(String comment) {
+        this.comment = comment;
+      }
+
+      @Override
+      public void accept(Visitor v) {
+        v.visit(this);
+      }
+    }
+
+    public static class Iaload extends T {
+
+      public Iaload() {
+
+      }
+
+      @Override
+      public void accept(Visitor v) {
+        v.visit(this);
+      }
+    }
+
+    public static class Iastore extends T {
+
+      public Iastore() {
+
+      }
+
+      @Override
+      public void accept(Visitor v) {
+        v.visit(this);
+      }
+    }
+
+
     public static class Aload extends T {
       public int index;
 
@@ -117,6 +155,40 @@ public class Ast {
 
       public Astore(int index) {
         this.index = index;
+      }
+
+      @Override
+      public void accept(Visitor v) {
+        v.visit(this);
+      }
+    }
+
+    public static class Putfield extends T {
+      public codegen.bytecode.Ast.Type.T type;
+      public String className;
+      public String fieldName;
+
+      public Putfield(codegen.bytecode.Ast.Type.T type, String className, String fieldName) {
+        this.type = type;
+        this.className = className;
+        this.fieldName = fieldName;
+      }
+
+      @Override
+      public void accept(Visitor v) {
+        v.visit(this);
+      }
+    }
+
+    public static class Getfield extends T {
+      public codegen.bytecode.Ast.Type.T type;
+      public String className;
+      public String fieldName;
+
+      public Getfield(codegen.bytecode.Ast.Type.T type, String className, String fieldName) {
+        this.type = type;
+        this.className = className;
+        this.fieldName = fieldName;
       }
 
       @Override
@@ -164,6 +236,19 @@ public class Ast {
       }
     }
 
+    public static class Ifeq extends T {
+      public Label l;
+
+      public Ifeq(Label l) {
+        this.l = l;
+      }
+
+      @Override
+      public void accept(Visitor v) {
+        v.visit(this);
+      }
+    }
+
     public static class Iload extends T {
       public int index;
 
@@ -187,6 +272,16 @@ public class Ast {
       }
     }
 
+    public static class Iand extends T {
+      public Iand() {
+      }
+
+      @Override
+      public void accept(Visitor v) {
+        v.visit(this);
+      }
+    }
+
     public static class Invokevirtual extends T {
       public String f;
       public String c;
@@ -198,6 +293,30 @@ public class Ast {
         this.c = c;
         this.at = at;
         this.rt = rt;
+      }
+
+      @Override
+      public void accept(Visitor v) {
+        v.visit(this);
+      }
+    }
+
+    public static class Iarraylength extends T {
+      public Iarraylength() {
+
+      }
+
+      @Override
+      public void accept(Visitor v) {
+        v.visit(this);
+      }
+    }
+
+    public static class Inewarray extends T {
+      String type;
+
+      public Inewarray(String type) {
+        this.type = type;
       }
 
       @Override
@@ -231,6 +350,16 @@ public class Ast {
 
     public static class Isub extends T {
       public Isub() {
+      }
+
+      @Override
+      public void accept(Visitor v) {
+        v.visit(this);
+      }
+    }
+
+    public static class Iadd extends T {
+      public Iadd() {
       }
 
       @Override

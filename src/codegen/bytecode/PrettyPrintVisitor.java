@@ -9,15 +9,17 @@ import codegen.bytecode.Ast.Method;
 import codegen.bytecode.Ast.Method.MethodSingle;
 import codegen.bytecode.Ast.Program.ProgramSingle;
 import codegen.bytecode.Ast.Stm.*;
-import codegen.bytecode.Ast.Type;
 import codegen.bytecode.Ast.Type.ClassType;
 import codegen.bytecode.Ast.Type.Int;
 import codegen.bytecode.Ast.Type.IntArray;
+import util.Bug;
 
 public class PrettyPrintVisitor implements Visitor {
   private java.io.BufferedWriter writer;
+  private ClassTable table;
 
-  public PrettyPrintVisitor() {
+  public PrettyPrintVisitor(ClassTable table) {
+    this.table = table;
   }
 
   private void sayln(String s) {
@@ -41,6 +43,10 @@ public class PrettyPrintVisitor implements Visitor {
     }
   }
 
+  private void isay(String s) {
+    say("    " + s);
+  }
+
   private void say(String s) {
     try {
       this.writer.write(s);
@@ -50,96 +56,151 @@ public class PrettyPrintVisitor implements Visitor {
     }
   }
 
+  @Override
+  public void visit(Comment s) {
+    this.sayln("; " + s);
+  }
+
   // /////////////////////////////////////////////////////
   // statements
+
+
+  @Override
+  public void visit(Iaload s) {
+    this.isayln("iaload");
+  }
+
+  @Override
+  public void visit(Iastore s) {
+    this.isayln("iastore");
+  }
+
   @Override
   public void visit(Aload s) {
     this.isayln("aload " + s.index);
-    return;
   }
 
   @Override
   public void visit(Areturn s) {
     this.isayln("areturn");
-    return;
   }
 
   @Override
   public void visit(Astore s) {
     this.isayln("astore " + s.index);
-    return;
+  }
+
+  @Override
+  public void visit(Putfield s) {
+    this.isay("putfield " + s.className + "/" + s.fieldName + " ");
+    s.type.accept(this);
+    say("\n");
+  }
+
+  @Override
+  public void visit(Getfield s) {
+    this.isay("getfield " + s.className + "/" + s.fieldName + " ");
+    s.type.accept(this);
+    say("\n");
   }
 
   @Override
   public void visit(Goto s) {
     this.isayln("goto " + s.l.toString());
-    return;
   }
 
   @Override
   public void visit(Ificmplt s) {
     this.isayln("if_icmplt " + s.l.toString());
-    return;
   }
 
   @Override
   public void visit(Ifne s) {
     this.isayln("ifne " + s.l.toString());
-    return;
+  }
+
+  @Override
+  public void visit(Ifeq s) {
+    this.isayln("ifeq " + s.l.toString());
   }
 
   @Override
   public void visit(Iload s) {
     this.isayln("iload " + s.index);
-    return;
   }
 
   @Override
   public void visit(Imul s) {
     this.isayln("imul");
-    return;
+  }
+
+  @Override
+  public void visit(Iand s) {
+    this.isayln("iand");
   }
 
   @Override
   public void visit(Invokevirtual s) {
     this.say("    invokevirtual " + s.c + "/" + s.f + "(");
-    for (Type.T t : s.at) {
-      t.accept(this);
+    ClassBinding cb = table.get(s.c);
+    if (cb == null) {
+      new Bug();
     }
+
+    for (Ftuple method : cb.methods) {
+      if (method.id.equals(s.f)) {
+        for (Dec.T d : method.args) {
+          ((DecSingle) d).type.accept(this);
+        }
+
+        break;
+      }
+
+    }
+
     this.say(")");
     s.rt.accept(this);
     this.sayln("");
-    return;
+  }
+
+  @Override
+  public void visit(Iarraylength s) {
+    this.isayln("arraylength");
+  }
+
+  @Override
+  public void visit(Inewarray s) {
+    this.isayln("newarray " + s.type);
   }
 
   @Override
   public void visit(Ireturn s) {
     this.isayln("ireturn");
-    return;
   }
 
   @Override
   public void visit(Istore s) {
     this.isayln("istore " + s.index);
-    return;
   }
 
   @Override
   public void visit(Isub s) {
     this.isayln("isub");
-    return;
+  }
+
+  @Override
+  public void visit(Iadd s) {
+    this.isayln("iadd");
   }
 
   @Override
   public void visit(LabelJ s) {
     this.sayln(s.l.toString() + ":");
-    return;
   }
 
   @Override
   public void visit(Ldc s) {
     this.isayln("ldc " + s.i);
-    return;
   }
 
   @Override
@@ -147,7 +208,6 @@ public class PrettyPrintVisitor implements Visitor {
     this.isayln("new " + s.c);
     this.isayln("dup");
     this.isayln("invokespecial " + s.c + "/<init>()V");
-    return;
   }
 
   @Override
@@ -155,7 +215,6 @@ public class PrettyPrintVisitor implements Visitor {
     this.isayln("getstatic java/lang/System/out Ljava/io/PrintStream;");
     this.isayln("swap");
     this.isayln("invokevirtual java/io/PrintStream/println(I)V");
-    return;
   }
 
   // type
@@ -197,7 +256,6 @@ public class PrettyPrintVisitor implements Visitor {
       s.accept(this);
 
     this.sayln(".end method");
-    return;
   }
 
   // class
@@ -225,7 +283,7 @@ public class PrettyPrintVisitor implements Visitor {
     // fields
     for (Dec.T d : c.decs) {
       DecSingle dd = (DecSingle) d;
-      this.say(".field public " + dd.id);
+      this.say(".field public " + dd.id + " ");
       dd.type.accept(this);
       this.sayln("");
     }
@@ -250,7 +308,6 @@ public class PrettyPrintVisitor implements Visitor {
       e.printStackTrace();
       System.exit(1);
     }
-    return;
   }
 
   // main class
@@ -284,7 +341,6 @@ public class PrettyPrintVisitor implements Visitor {
       e.printStackTrace();
       System.exit(1);
     }
-    return;
   }
 
   // program

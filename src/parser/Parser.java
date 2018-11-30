@@ -5,11 +5,14 @@ import lexer.Lexer;
 import lexer.Token;
 import lexer.Token.Kind;
 
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 public class Parser {
   Lexer lexer;
   Token current;
+  Map<String, Ast.Type.T> id2type;
 
   public Parser(String fname, java.io.InputStream fstream) {
     lexer = new Lexer(fname, fstream);
@@ -37,7 +40,6 @@ public class Parser {
   private void error() {
     System.out.println("Syntax error: compilation aborting...\n");
     System.exit(1);
-    return;
   }
 
   // ////////////////////////////////////////////////////////////
@@ -100,6 +102,11 @@ public class Parser {
         return exp;
       case TOKEN_ID:
         exp = new Ast.Exp.Id(current.lexeme);
+        Ast.Type.T type = id2type.get(current.lexeme);
+        if (type != null) {
+          ((Ast.Exp.Id) exp).type = type;
+        }
+
         advance();
         return exp;
       case TOKEN_NEW: {
@@ -416,6 +423,7 @@ public class Parser {
       type = parseType();
       id = current.lexeme;
       eatToken(Kind.TOKEN_ID);
+
       decs.add(new Ast.Dec.DecSingle(type, id));
 
       while (current.kind == Kind.TOKEN_COMMER) {
@@ -435,6 +443,8 @@ public class Parser {
     // Lab1. Exercise 4: Fill in the missing code
     // to parse a method.
 
+    id2type = new HashMap<>();
+
     advance();
     Ast.Type.T retType = parseType();
     String id = current.lexeme;
@@ -444,8 +454,20 @@ public class Parser {
     eatToken(Kind.TOKEN_RPAREN);
     eatToken(Kind.TOKEN_LBRACE);
 
+    for (Ast.Dec.T d : formals) {
+      Ast.Dec.DecSingle dec = (Ast.Dec.DecSingle)d;
+      id2type.put(dec.id, dec.type);
+    }
+
 
     LinkedList<Ast.Dec.T> locals = parseVarDecls();
+
+    for (Ast.Dec.T d : locals) {
+      Ast.Dec.DecSingle dec = (Ast.Dec.DecSingle)d;
+      id2type.put(dec.id, dec.type);
+    }
+
+
     LinkedList<Ast.Stm.T> stmts = parseStatements();
 
     eatToken(Kind.TOKEN_RETURN);

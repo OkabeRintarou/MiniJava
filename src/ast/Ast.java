@@ -146,7 +146,11 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
+      }
+
+      @Override
+      public String toString() {
+        return left.toString() + " + " + right.toString();
       }
     }
 
@@ -163,7 +167,11 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
+      }
+
+      @Override
+      public String toString() {
+        return left.toString() + " & " + right.toString();
       }
     }
 
@@ -180,7 +188,11 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
+      }
+
+      @Override
+      public String toString() {
+        return array.toString() + "[" + index.toString() + "]";
       }
     }
 
@@ -203,7 +215,6 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
       }
     }
 
@@ -215,7 +226,6 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
       }
     }
 
@@ -240,7 +250,6 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
       }
     }
 
@@ -255,7 +264,6 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
       }
     }
 
@@ -272,7 +280,11 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
+      }
+
+      @Override
+      public String toString() {
+        return left.toString() + " < " + right.toString();
       }
     }
 
@@ -287,7 +299,6 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
       }
     }
 
@@ -302,7 +313,6 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
       }
     }
 
@@ -317,7 +327,6 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
       }
     }
 
@@ -332,7 +341,6 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
       }
     }
 
@@ -349,7 +357,6 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
       }
     }
 
@@ -361,7 +368,6 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
       }
     }
 
@@ -378,7 +384,6 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
       }
     }
 
@@ -390,7 +395,6 @@ public class Ast {
       @Override
       public void accept(ast.Visitor v) {
         v.visit(this);
-        return;
       }
     }
 
@@ -580,7 +584,6 @@ public class Ast {
       @Override
       public void accept(Visitor v) {
         v.visit(this);
-        return;
       }
     }
 
@@ -603,7 +606,6 @@ public class Ast {
       @Override
       public void accept(Visitor v) {
         v.visit(this);
-        return;
       }
     }
 

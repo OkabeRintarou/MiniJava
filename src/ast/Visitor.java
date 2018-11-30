@@ -13,72 +13,72 @@ import ast.Ast.Type.IntArray;
 
 public interface Visitor {
   // expressions
-  public void visit(Add e);
+  void visit(Add e);
 
-  public void visit(And e);
+  void visit(And e);
 
-  public void visit(ArraySelect e);
+  void visit(ArraySelect e);
 
-  public void visit(Call e);
+  void visit(Call e);
 
-  public void visit(False e);
+  void visit(False e);
 
-  public void visit(Id e);
+  void visit(Id e);
 
-  public void visit(Length e);
+  void visit(Length e);
 
-  public void visit(Lt e);
+  void visit(Lt e);
 
-  public void visit(NewIntArray e);
+  void visit(NewIntArray e);
 
-  public void visit(NewObject e);
+  void visit(NewObject e);
 
-  public void visit(Not e);
+  void visit(Not e);
 
-  public void visit(Num e);
+  void visit(Num e);
 
-  public void visit(Sub e);
+  void visit(Sub e);
 
-  public void visit(This e);
+  void visit(This e);
 
-  public void visit(Times e);
+  void visit(Times e);
 
-  public void visit(True e);
+  void visit(True e);
 
   // statements
-  public void visit(Assign s);
+  void visit(Assign s);
 
-  public void visit(AssignArray s);
+  void visit(AssignArray s);
 
-  public void visit(Block s);
+  void visit(Block s);
 
-  public void visit(If s);
+  void visit(If s);
 
-  public void visit(Print s);
+  void visit(Print s);
 
-  public void visit(While s);
+  void visit(While s);
 
   // type
-  public void visit(Boolean t);
+  void visit(Boolean t);
 
-  public void visit(ClassType t);
+  void visit(ClassType t);
 
-  public void visit(Int t);
+  void visit(Int t);
 
-  public void visit(IntArray t);
+  void visit(IntArray t);
 
   // dec
-  public void visit(Dec.DecSingle d);
+  void visit(Dec.DecSingle d);
 
   // method
-  public void visit(MethodSingle m);
+  void visit(MethodSingle m);
 
   // class
-  public void visit(Class.ClassSingle c);
+  void visit(Class.ClassSingle c);
 
   // main class
-  public void visit(MainClassSingle c);
+  void visit(MainClassSingle c);
 
   // program
-  public void visit(Ast.Program.ProgramSingle p);
+  void visit(Ast.Program.ProgramSingle p);
 }

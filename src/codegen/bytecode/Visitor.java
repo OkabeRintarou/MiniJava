@@ -11,58 +11,79 @@ import codegen.bytecode.Ast.Type.Int;
 import codegen.bytecode.Ast.Type.IntArray;
 
 public interface Visitor {
+
+  void visit(Comment s);
+
   // statements
-  public void visit(Aload s);
+  void visit(Iaload s);
 
-  public void visit(Areturn s);
+  void visit(Iastore s);
 
-  public void visit(Astore s);
+  void visit(Aload s);
 
-  public void visit(Goto s);
+  void visit(Areturn s);
 
-  public void visit(Ificmplt s);
+  void visit(Astore s);
 
-  public void visit(Ifne s);
+  void visit(Putfield s);
 
-  public void visit(Iload s);
+  void visit(Getfield s);
 
-  public void visit(Imul s);
+  void visit(Goto s);
 
-  public void visit(Ireturn s);
+  void visit(Ificmplt s);
 
-  public void visit(Istore s);
+  void visit(Ifne s);
 
-  public void visit(Isub s);
+  void visit(Ifeq s);
 
-  public void visit(Invokevirtual s);
+  void visit(Iload s);
 
-  public void visit(LabelJ s);
+  void visit(Imul s);
 
-  public void visit(Ldc s);
+  void visit(Ireturn s);
 
-  public void visit(Print s);
+  void visit(Istore s);
 
-  public void visit(New s);
+  void visit(Isub s);
+
+  void visit(Iadd s);
+
+  void visit(Iand s);
+
+  void visit(Invokevirtual s);
+
+  void visit(Iarraylength s);
+
+  void visit(Inewarray s);
+
+  void visit(LabelJ s);
+
+  void visit(Ldc s);
+
+  void visit(Print s);
+
+  void visit(New s);
 
   // type
-  public void visit(ClassType t);
+  void visit(ClassType t);
 
-  public void visit(Int t);
+  void visit(Int t);
 
-  public void visit(IntArray t);
+  void visit(IntArray t);
 
   // dec
-  public void visit(DecSingle d);
+  void visit(DecSingle d);
 
   // method
-  public void visit(MethodSingle m);
+  void visit(MethodSingle m);
 
   // class
-  public void visit(ClassSingle c);
+  void visit(ClassSingle c);
 
   // main class
-  public void visit(MainClassSingle c);
+  void visit(MainClassSingle c);
 
   // program
-  public void visit(ProgramSingle p);
+  void visit(ProgramSingle p);
 }
