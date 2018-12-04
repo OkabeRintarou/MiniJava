@@ -101,7 +101,12 @@ p---->| v_0          | \
 void *Tiger_new (void *vtable, int size)
 {
   // Your code here:
-  
+  if (size <= 0) {
+    return NULL;
+  }
+  void *ptr = calloc(size + sizeof(void*), sizeof(char));
+  *((void**)(ptr)) = vtable;
+  return ptr;
 }
 
 // "new" an array of size "length", do necessary
@@ -141,7 +146,9 @@ p---->| e_0          | \
 void *Tiger_new_array (int length)
 {
   // Your code here:
-  
+  void *ptr = malloc(sizeof(char)* (length + sizeof(int)));
+  *(int*)ptr = length;
+  return (char*)ptr + sizeof(int);
 }
 
 //===============================================================//

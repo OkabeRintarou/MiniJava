@@ -8,6 +8,9 @@ public class Ast {
   // type
   public static class Type {
     public static abstract class T implements codegen.C.Acceptable {
+      public boolean isReferenceType() {
+        return false;
+      }
     }
 
     public static class ClassType extends T {
@@ -25,6 +28,11 @@ public class Ast {
       @Override
       public void accept(Visitor v) {
         v.visit(this);
+      }
+
+      @Override
+      public boolean isReferenceType() {
+        return true;
       }
     }
 
@@ -57,6 +65,10 @@ public class Ast {
         v.visit(this);
       }
 
+      @Override
+      public boolean isReferenceType() {
+        return true;
+      }
     }
 
   }// end of type

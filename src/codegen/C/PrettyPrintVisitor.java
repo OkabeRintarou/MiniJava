@@ -13,11 +13,9 @@ import codegen.C.Ast.Type.Int;
 import codegen.C.Ast.Type.IntArray;
 import codegen.C.Ast.Vtable.VtableSingle;
 import control.Control;
+import util.Bug;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 class MethodLocals {
 
@@ -83,6 +81,8 @@ public class PrettyPrintVisitor implements Visitor {
   private MethodInfo methodInfo;
   private String className;
   private String methodName;
+  private Map<String, Integer> localsSet;
+  private Map<String, List<Type.T>> classField;
 
 
   public PrettyPrintVisitor(TranslateVisitor visitor) {
@@ -94,6 +94,8 @@ public class PrettyPrintVisitor implements Visitor {
     }
 
     this.methodName = null;
+    this.localsSet = new HashMap<>();
+    this.classField = new HashMap<>();
   }
 
   private void indent() {
@@ -129,12 +131,14 @@ public class PrettyPrintVisitor implements Visitor {
     }
   }
 
-  private void verifyClassField(String var) {
+  private boolean verifyClassField(String var) {
     if (className != null && methodName != null) {
       if (!methodInfo.contains(className, methodName, var)) {
         this.say("this->");
+        return true;
       }
     }
+    return false;
   }
 
   // /////////////////////////////////////////////////////
@@ -163,10 +167,16 @@ public class PrettyPrintVisitor implements Visitor {
 
   @Override
   public void visit(Call e) {
-    this.say("(" + e.assign + "=");
+    String assign;
+    if (localsSet.containsKey(e.assign)) {
+      assign = "frame." + e.assign;
+    } else {
+      assign = e.assign;
+    }
+    this.say("(" + assign + "=");
     e.exp.accept(this);
     this.say(", ");
-    this.say(e.assign + "->vptr->" + e.id + "(" + e.assign);
+    this.say(assign + "->vptr->" + e.id + "(" + assign);
     int size = e.args.size();
     if (size == 0) {
       this.say("))");
@@ -182,7 +192,10 @@ public class PrettyPrintVisitor implements Visitor {
   @Override
   public void visit(Id e) {
 
-    verifyClassField(e.id);
+    if (!verifyClassField(e.id) &&
+        localsSet.containsKey(e.id)) {
+      this.say("frame.");
+    }
 
     this.say(e.id);
   }
@@ -248,7 +261,10 @@ public class PrettyPrintVisitor implements Visitor {
   public void visit(Assign s) {
     this.printSpaces();
 
-    verifyClassField(s.id);
+    if (!verifyClassField(s.id) &&
+        localsSet.containsKey(s.id)) {
+      this.say("frame.");
+    }
 
     this.say(s.id + " = ");
 
@@ -260,7 +276,10 @@ public class PrettyPrintVisitor implements Visitor {
   public void visit(AssignArray s) {
     this.printSpaces();
 
-    verifyClassField(s.id);
+    if (!verifyClassField(s.id) &&
+        localsSet.containsKey(s.id)) {
+      this.say("frame.");
+    }
     this.say(s.id + "[");
 
     s.index.accept(this);
@@ -346,8 +365,15 @@ public class PrettyPrintVisitor implements Visitor {
   @Override
   public void visit(MethodSingle m) {
 
+    StringBuilder argumentGCMap = new StringBuilder();
+    StringBuilder localGCMap = new StringBuilder();
+
     this.methodName = m.id;
     this.className = m.classId;
+    this.localsSet.clear();
+
+    String structName = outputGCStack(m);
+    this.sayln("");
 
     m.retType.accept(this);
     this.say(" " + m.classId + "_" + m.id + "(");
@@ -356,6 +382,13 @@ public class PrettyPrintVisitor implements Visitor {
       DecSingle dec = (DecSingle) d;
       size--;
       dec.type.accept(this);
+
+      if (dec.type.isReferenceType()) {
+        argumentGCMap.append("1");
+      } else {
+        argumentGCMap.append("0");
+      }
+
       this.say(" " + dec.id);
       if (size > 0)
         this.say(", ");
@@ -363,12 +396,26 @@ public class PrettyPrintVisitor implements Visitor {
     this.sayln(")");
     this.sayln("{");
 
+    this.sayln("  struct " + structName + " frame;");
+    this.sayln("  frame.prev0xbadbaby = prev;");
+    this.sayln("  frame.argument_base_address = ((int*)((void*)(&this)));");
+    this.sayln("  frame.argument_gc_map = \"" + argumentGCMap.toString() + "\";");
+
+    int index = 0;
     for (Dec.T d : m.locals) {
       DecSingle dec = (DecSingle) d;
-      this.say("  ");
-      dec.type.accept(this);
-      this.say(" " + dec.id + ";\n");
+      localsSet.put(dec.id, index);
+
+      if (dec.type.isReferenceType()) {
+        localGCMap.append("1");
+      } else {
+        localGCMap.append("0");
+      }
+      index++;
     }
+    this.sayln("  frame.locals_gc_map = \"" + localGCMap.toString() + "\";");
+
+
     this.sayln("");
     for (Stm.T s : m.stms)
       s.accept(this);
@@ -378,6 +425,27 @@ public class PrettyPrintVisitor implements Visitor {
     this.sayln("}");
     this.methodName = null;
     this.className = null;
+  }
+
+  private String outputGCStack(MethodSingle m) {
+
+    String structName = m.classId + "_" + m.id + "_gc_frame";
+
+    this.sayln("struct " + structName + " {");
+    this.sayln("  void *prev0xbadbaby;");
+    this.sayln("  int *argument_base_address;");
+    this.sayln("  char *argument_gc_map;");
+    this.sayln("  char *locals_gc_map;");
+    for (Dec.T d : m.locals) {
+      this.say("  ");
+
+      DecSingle dec = (DecSingle) d;
+      dec.type.accept(this);
+      this.sayln(" " + dec.id + ";");
+    }
+    this.sayln("};");
+
+    return structName;
   }
 
   @Override
@@ -406,6 +474,8 @@ public class PrettyPrintVisitor implements Visitor {
   public void visit(VtableSingle v) {
     this.sayln("struct " + v.id + "_vtable");
     this.sayln("{");
+
+    this.sayln("  char* " + v.id + "_gc_map;");
     for (Ftuple t : v.ms) {
       this.say("  ");
       t.ret.accept(this);
@@ -426,11 +496,28 @@ public class PrettyPrintVisitor implements Visitor {
       this.sayln(");");
     }
     this.sayln("};\n");
+
+
   }
 
   private void outputVtable(VtableSingle v) {
     this.sayln("struct " + v.id + "_vtable " + v.id + "_vtable_ = ");
     this.sayln("{");
+
+    StringBuilder sb = new StringBuilder();
+    List<Type.T> fields = classField.get(v.id);
+    if (fields == null) {
+      new Bug();
+    }
+    for (Type.T t : fields) {
+      if (t.isReferenceType()) {
+        sb.append("1");
+      } else {
+        sb.append("0");
+      }
+    }
+    this.sayln("  \"" + sb.toString() + "\",");
+
     for (Ftuple t : v.ms) {
       this.say("  ");
       this.sayln(t.classs + "_" + t.id + ",");
@@ -444,12 +531,18 @@ public class PrettyPrintVisitor implements Visitor {
     this.sayln("struct " + c.id);
     this.sayln("{");
     this.sayln("  struct " + c.id + "_vtable *vptr;");
+
+    List<Type.T> fields = new ArrayList<>();
+
+
     for (Tuple t : c.decs) {
+      fields.add(t.type);
       this.say("  ");
       t.type.accept(this);
       this.say(" ");
       this.sayln(t.id + ";");
     }
+    this.classField.put(c.id, fields);
     this.sayln("};");
 
   }
@@ -491,6 +584,11 @@ public class PrettyPrintVisitor implements Visitor {
 
     this.sayln("// This is automatically generated by the Tiger compiler.");
     this.sayln("// Do NOT modify!\n");
+
+    this.sayln("// global variables");
+    this.sayln("void *prev;");
+    this.sayln("");
+
 
     this.sayln("// structures");
     for (Ast.Class.T c : p.classes) {

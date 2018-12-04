@@ -378,8 +378,4 @@ public class TranslateVisitor implements ast.Visitor {
     this.program = new ProgramSingle(this.classes, this.vtables,
         this.methods, this.mainMethod);
   }
-
-  public ClassTable getClassTable() {
-    return table;
-  }
 }
