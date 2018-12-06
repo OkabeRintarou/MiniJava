@@ -3,6 +3,7 @@
 #include <string.h>
 
 extern void Tiger_heap_init (int);
+extern int Tiger_main();
 
 int main (int argc, char **argv)
 {
